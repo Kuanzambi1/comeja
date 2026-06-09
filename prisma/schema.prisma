@@ -1,0 +1,181 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum UserRole {
+  ADMIN
+  COMPRADOR
+  RESTAURANTE
+  ENTREGADOR
+}
+
+enum PedidoStatus {
+  CANCELADO
+  RECEBIDO
+  EM_PREPARO
+  PRONTO
+  ACEITO_ENTREGADOR
+  A_CAMINHO_RESTAURANTE
+  A_CAMINHO_CLIENTE
+  ENTREGUE
+}
+
+enum FormaPagamento {
+  DINHEIRO
+  CARTAO
+  PIX
+}
+
+enum RastreamentoStatus {
+  SAINDO_RESTAURANTE
+  A_CAMINHO_CLIENTE
+  ENTREGUE
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  role         UserRole
+  email        String   @unique
+  telefone     String?
+  passwordHash String
+  createdAt    DateTime @default(now())
+
+  comprador   Comprador?
+  restaurante Restaurante?
+  entregador  Entregador?
+}
+
+model Comprador {
+  userId Int @id
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  enderecos  Endereco[]
+  pedidos    Pedido[]
+  avaliacoes Avaliacao[]
+}
+
+model Restaurante {
+  userId Int @id
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  nome             String
+  horarioInicio   String?
+  horarioFim      String?
+  disponivel       Boolean @default(true)
+
+  // Usado para filtrar "restaurantes por proximidade".
+  lat              Float?
+  lng              Float?
+
+  produtos       Produto[]
+  pedidos        Pedido[]
+  createdAt      DateTime @default(now())
+}
+
+model Entregador {
+  userId Int @id
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  documento   String
+  veiculo     String
+  fotoUrl     String?
+  disponivel  Boolean @default(false)
+
+  entreges    Pedido[]
+  createdAt   DateTime @default(now())
+}
+
+model Endereco {
+  id          Int      @id @default(autoincrement())
+  compradorId Int
+  logradouro  String
+  lat         Float?
+  lng         Float?
+
+  comprador Comprador @relation(fields: [compradorId], references: [userId], onDelete: Cascade)
+}
+
+model Produto {
+  id           Int @id @default(autoincrement())
+  restauranteId Int
+
+  nome        String
+  precoCents  Int
+  descricao   String
+  fotoUrl     String?
+  disponivel  Boolean @default(true)
+
+  restaurante Restaurante @relation(fields: [restauranteId], references: [userId], onDelete: Cascade)
+  itemPedidos ItemPedido[]
+
+  createdAt DateTime @default(now())
+}
+
+model Pedido {
+  id             Int @id @default(autoincrement())
+  compradorId    Int
+  restauranteId  Int
+  entregadorId   Int?
+
+  status         PedidoStatus @default(RECEBIDO)
+  totalCents     Int
+  taxaEntregaCents Int
+  formaPagamento FormaPagamento
+  criadoEm       DateTime      @default(now())
+
+  comprador   Comprador    @relation(fields: [compradorId], references: [userId], onDelete: Cascade)
+  restaurante Restaurante @relation(fields: [restauranteId], references: [userId], onDelete: Cascade)
+  entregador  Entregador? @relation(fields: [entregadorId], references: [userId], onDelete: SetNull)
+
+  itens        ItemPedido[]
+  avaliacao    Avaliacao?
+  rastreamento Rastreamento[]
+}
+
+model ItemPedido {
+  id            Int @id @default(autoincrement())
+  pedidoId      Int
+  produtoId     Int
+
+  quantidade   Int
+  precoUnitarioCents Int
+
+  pedido  Pedido  @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+  produto Produto @relation(fields: [produtoId], references: [id], onDelete: Restrict)
+
+  @@unique([pedidoId, produtoId])
+}
+
+model Avaliacao {
+  id              Int @id @default(autoincrement())
+  compradorId     Int
+  pedidoId       Int @unique
+
+  notaEntregador  Int?
+  notaRestaurante Int?
+  comentario      String?
+
+  comprador Comprador @relation(fields: [compradorId], references: [userId], onDelete: Cascade)
+  pedido    Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+}
+
+model Rastreamento {
+  id                    Int @id @default(autoincrement())
+  pedidoId              Int
+  latitude              Float
+  longitude             Float
+  timestamp             DateTime @default(now())
+  statusNaqueleMomento RastreamentoStatus
+
+  pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+}
