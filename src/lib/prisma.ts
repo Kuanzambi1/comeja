@@ -1,5 +1,5 @@
 import { PrismaClient } from "@/generated/prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaPg } from "@prisma/adapter-pg";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -9,12 +9,8 @@ const globalForPrisma = globalThis as unknown as {
 const SCHEMA_VERSION = "v3";
 
 function createPrismaClient() {
-  const adapter = new PrismaMariaDb({
-    host: process.env.MYSQL_HOST || "localhost",
-    port: Number(process.env.MYSQL_PORT) || 3306,
-    user: process.env.MYSQL_USER || "root",
-    password: process.env.MYSQL_PASSWORD || "",
-    database: process.env.MYSQL_DATABASE || "fastfood_delivery",
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL || "postgresql://postgres@localhost:5432/fastfood_delivery",
   });
   return new PrismaClient({ adapter });
 }

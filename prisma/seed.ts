@@ -1,14 +1,10 @@
 import "dotenv/config";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaMariaDb } from "@prisma/adapter-mariadb";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
-const adapter = new PrismaMariaDb({
-  host: process.env.MYSQL_HOST || "localhost",
-  port: Number(process.env.MYSQL_PORT) || 3306,
-  user: process.env.MYSQL_USER || "root",
-  password: process.env.MYSQL_PASSWORD || "",
-  database: process.env.MYSQL_DATABASE || "fastfood_delivery",
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL || "postgresql://postgres@localhost:5432/fastfood_delivery",
 });
 const prisma = new PrismaClient({ adapter });
 
