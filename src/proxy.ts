@@ -11,7 +11,7 @@ const roleRoutes: Record<string, string[]> = {
   ADMIN: ["/admin"],
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (publicRoutes.includes(pathname) || pathname.startsWith("/_next") || pathname.startsWith("/api/auth")) {
