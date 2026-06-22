@@ -1,18 +1,17 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { getAuthUserFromHeaders } from "@/lib/auth";
 import { apiError } from "@/lib/utils";
+import type { PedidoStatus } from "@/generated/prisma/enums";
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const token = request.cookies.get("token")?.value;
-  if (!token) return apiError("Não autenticado", 401);
 
-  const user = await verifyToken(token);
+  const user = getAuthUserFromHeaders(request.headers);
   if (!user || user.role !== "ENTREGADOR") return apiError("Acesso negado", 403);
 
   try {
@@ -21,39 +20,35 @@ export async function PATCH(
       .object({ action: z.string(), status: z.string().optional() })
       .parse(body);
 
-    const pedido = await prisma.pedido.findUnique({
-      where: { id: Number(id) },
-    });
-
-    if (!pedido) return apiError("Pedido não encontrado", 404);
+    const pedidoId = Number(id);
 
     if (action === "aceitar") {
-      if (pedido.entregadorId) return apiError("Pedido já aceito por outro entregador", 400);
-      if (pedido.status !== "PRONTO") return apiError("Pedido não está pronto", 400);
-
-      await prisma.pedido.update({
-        where: { id: Number(id) },
+      const result = await prisma.pedido.updateMany({
+        where: { id: pedidoId, entregadorId: null, status: "PRONTO" },
         data: { entregadorId: user.userId, status: "ACEITO_ENTREGADOR" },
       });
+      if (result.count === 0) return apiError("Pedido não disponível", 400);
     } else if (action === "status") {
-      if (pedido.entregadorId !== user.userId)
-        return apiError("Este pedido não é sua entrega", 403);
-
       const allowedTransitions: Record<string, string[]> = {
         ACEITO_ENTREGADOR: ["A_CAMINHO_RESTAURANTE"],
         A_CAMINHO_RESTAURANTE: ["A_CAMINHO_CLIENTE"],
         A_CAMINHO_CLIENTE: ["ENTREGUE"],
       };
 
-      const currentStatus = pedido.status;
-      const allowed = allowedTransitions[currentStatus];
-      if (!allowed || !allowed.includes(status as string))
-        return apiError("Transição de status não permitida", 400);
+      const entry = Object.entries(allowedTransitions).find(([, to]) =>
+        to.includes(status!)
+      );
+      if (!entry) return apiError("Transição de status não permitida", 400);
 
-      await prisma.pedido.update({
-        where: { id: Number(id) },
-        data: { status: status as any },
+      const result = await prisma.pedido.updateMany({
+        where: {
+          id: pedidoId,
+          entregadorId: user.userId,
+          status: entry[0] as PedidoStatus,
+        },
+        data: { status: status as PedidoStatus },
       });
+      if (result.count === 0) return apiError("Transição de status não permitida", 400);
     } else {
       return apiError("Ação inválida", 400);
     }

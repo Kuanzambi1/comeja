@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { getAuthUserFromHeaders } from "@/lib/auth";
 import { apiError } from "@/lib/utils";
 
 const schema = z.object({
@@ -12,10 +12,7 @@ const schema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return apiError("Não autenticado", 401);
-
-  const user = await verifyToken(token);
+  const user = getAuthUserFromHeaders(request.headers);
   if (!user || user.role !== "COMPRADOR") return apiError("Acesso negado", 403);
 
   try {

@@ -1,7 +1,12 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
-const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
+const globalForPrisma = globalThis as unknown as {
+  prisma: PrismaClient | undefined;
+  prismaVersion: string | undefined;
+};
+
+const SCHEMA_VERSION = "v3";
 
 function createPrismaClient() {
   const adapter = new PrismaMariaDb({
@@ -14,6 +19,16 @@ function createPrismaClient() {
   return new PrismaClient({ adapter });
 }
 
-export const prisma = globalForPrisma.prisma ?? createPrismaClient();
+function getPrisma() {
+  if (globalForPrisma.prisma && globalForPrisma.prismaVersion === SCHEMA_VERSION) {
+    return globalForPrisma.prisma;
+  }
+  const client = createPrismaClient();
+  if (process.env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = client;
+    globalForPrisma.prismaVersion = SCHEMA_VERSION;
+  }
+  return client;
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const prisma = getPrisma();

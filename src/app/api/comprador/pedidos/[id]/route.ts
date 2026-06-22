@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { getAuthUserFromHeaders } from "@/lib/auth";
 import { apiError } from "@/lib/utils";
 
 export async function PATCH(
@@ -9,10 +9,8 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const token = request.cookies.get("token")?.value;
-  if (!token) return apiError("Não autenticado", 401);
 
-  const user = await verifyToken(token);
+  const user = getAuthUserFromHeaders(request.headers);
   if (!user || user.role !== "COMPRADOR") return apiError("Acesso negado", 403);
 
   try {
@@ -21,20 +19,12 @@ export async function PATCH(
 
     if (status !== "CANCELADO") return apiError("Ação inválida", 400);
 
-    const pedido = await prisma.pedido.findUnique({
-      where: { id: Number(id) },
-    });
-
-    if (!pedido || pedido.compradorId !== user.userId)
-      return apiError("Pedido não encontrado", 404);
-
-    if (pedido.status !== "RECEBIDO")
-      return apiError("Só é possível cancelar pedidos com status 'Recebido'", 400);
-
-    await prisma.pedido.update({
-      where: { id: Number(id) },
+    const result = await prisma.pedido.updateMany({
+      where: { id: Number(id), compradorId: user.userId, status: "RECEBIDO" },
       data: { status: "CANCELADO" },
     });
+
+    if (result.count === 0) return apiError("Não foi possível cancelar o pedido", 400);
 
     return Response.json({ success: true });
   } catch {

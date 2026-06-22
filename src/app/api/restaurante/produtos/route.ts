@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { getAuthUserFromHeaders } from "@/lib/auth";
 import { apiError } from "@/lib/utils";
 
 const createSchema = z.object({
@@ -16,10 +16,7 @@ const updateSchema = z.object({
 });
 
 export async function POST(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return apiError("Não autenticado", 401);
-
-  const user = await verifyToken(token);
+  const user = getAuthUserFromHeaders(request.headers);
   if (!user || user.role !== "RESTAURANTE") return apiError("Acesso negado", 403);
 
   try {
@@ -43,27 +40,19 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return apiError("Não autenticado", 401);
-
-  const user = await verifyToken(token);
+  const user = getAuthUserFromHeaders(request.headers);
   if (!user || user.role !== "RESTAURANTE") return apiError("Acesso negado", 403);
 
   try {
     const body = await request.json();
     const data = updateSchema.parse(body);
 
-    const produto = await prisma.produto.findUnique({
-      where: { id: data.produtoId },
-    });
-
-    if (!produto || produto.restauranteId !== user.userId)
-      return apiError("Produto não encontrado", 404);
-
-    await prisma.produto.update({
-      where: { id: data.produtoId },
+    const result = await prisma.produto.updateMany({
+      where: { id: data.produtoId, restauranteId: user.userId },
       data: { disponivel: data.disponivel },
     });
+
+    if (result.count === 0) return apiError("Produto não encontrado", 404);
 
     return Response.json({ success: true });
   } catch (error) {

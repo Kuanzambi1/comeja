@@ -1,7 +1,7 @@
 export function formatCents(cents: number): string {
-  return new Intl.NumberFormat("pt-BR", {
+  return new Intl.NumberFormat("pt", {
     style: "currency",
-    currency: "BRL",
+    currency: "AOA",
   }).format(cents / 100);
 }
 

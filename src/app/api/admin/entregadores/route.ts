@@ -1,14 +1,11 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
-import { verifyToken } from "@/lib/auth";
+import { getAuthUserFromHeaders } from "@/lib/auth";
 import { apiError } from "@/lib/utils";
 
 export async function PATCH(request: NextRequest) {
-  const token = request.cookies.get("token")?.value;
-  if (!token) return apiError("Não autenticado", 401);
-
-  const user = await verifyToken(token);
+  const user = getAuthUserFromHeaders(request.headers);
   if (!user || user.role !== "ADMIN") return apiError("Acesso negado", 403);
 
   try {

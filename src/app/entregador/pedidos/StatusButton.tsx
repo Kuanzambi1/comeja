@@ -1,7 +1,8 @@
 "use client";
 
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { atualizarStatusEntrega } from "@/actions/entregador";
 
 type Props = {
   pedidoId: number;
@@ -16,29 +17,43 @@ const statusActions: Record<string, { label: string; next: string; icon: string 
 
 export default function StatusButton({ pedidoId, status }: Props) {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const mounted = useRef(true);
+  const [localStatus, setLocalStatus] = useState(status);
 
-  const action = statusActions[status];
+  useEffect(() => {
+    return () => { mounted.current = false; };
+  }, []);
+
+  useEffect(() => {
+    setLocalStatus(status);
+  }, [status]);
+
+  const action = statusActions[localStatus];
   if (!action) return null;
 
   async function handleClick() {
-    setLoading(true);
-    const res = await fetch(`/api/entregador/pedidos/${pedidoId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "status", status: action.next }),
-    });
-    if (res.ok) router.refresh();
-    else setLoading(false);
+    const nextStatus = action.next;
+    setLocalStatus(nextStatus);
+    try {
+      await atualizarStatusEntrega(pedidoId, nextStatus);
+      router.refresh();
+    } catch {
+      if (mounted.current) setLocalStatus(status);
+    }
   }
 
   return (
     <button
       onClick={handleClick}
-      disabled={loading}
+      disabled={localStatus !== status}
       className="btn-primary whitespace-nowrap shrink-0"
     >
-      {loading ? "..." : `${action.icon} ${action.label}`}
+      {localStatus !== status ? (
+        <span className="flex items-center gap-1.5">
+          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>
+          {action.label}
+        </span>
+      ) : `${action.icon} ${action.label}`}
     </button>
   );
 }

@@ -103,6 +103,8 @@ model Endereco {
   lng         Float?
 
   comprador Comprador @relation(fields: [compradorId], references: [userId], onDelete: Cascade)
+
+  @@index([compradorId])
 }
 
 model Produto {
@@ -117,6 +119,8 @@ model Produto {
 
   restaurante Restaurante @relation(fields: [restauranteId], references: [userId], onDelete: Cascade)
   itemPedidos ItemPedido[]
+
+  @@index([restauranteId])
 
   createdAt DateTime @default(now())
 }
@@ -137,6 +141,12 @@ model Pedido {
   restaurante Restaurante @relation(fields: [restauranteId], references: [userId], onDelete: Cascade)
   entregador  Entregador? @relation(fields: [entregadorId], references: [userId], onDelete: SetNull)
 
+  @@index([status])
+  @@index([entregadorId])
+  @@index([restauranteId])
+  @@index([compradorId])
+  @@index([criadoEm])
+
   itens        ItemPedido[]
   avaliacao    Avaliacao?
   rastreamento Rastreamento[]
@@ -154,6 +164,8 @@ model ItemPedido {
   produto Produto @relation(fields: [produtoId], references: [id], onDelete: Restrict)
 
   @@unique([pedidoId, produtoId])
+  @@index([pedidoId])
+  @@index([produtoId])
 }
 
 model Avaliacao {
@@ -167,6 +179,8 @@ model Avaliacao {
 
   comprador Comprador @relation(fields: [compradorId], references: [userId], onDelete: Cascade)
   pedido    Pedido    @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@index([compradorId])
 }
 
 model Rastreamento {
@@ -178,4 +192,68 @@ model Rastreamento {
   statusNaqueleMomento RastreamentoStatus
 
   pedido Pedido @relation(fields: [pedidoId], references: [id], onDelete: Cascade)
+
+  @@index([pedidoId])
+}
+
+model EventoRastreamento {
+  id              Int      @id @default(autoincrement())
+  tipo            String   // visita, clique, carrinho_adicionar, carrinho_remover, conversao
+  sessionId       String
+  userId          Int?
+  pageUrl         String
+  elementSelector String?
+  x               Int?
+  y               Int?
+  viewportW       Int?
+  viewportH       Int?
+  pageH           Int?
+  metadata        String?  // JSON string
+  criadoEm        DateTime @default(now())
+
+  @@index([tipo])
+  @@index([sessionId])
+  @@index([userId])
+  @@index([criadoEm])
+  @@index([pageUrl])
+}
+
+model TesteAB {
+  id        Int      @id @default(autoincrement())
+  nome      String
+  hipotese  String
+  pagina    String   // route pattern onde o teste corre
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  variantes     VarianteAB[]
+  participacoes ParticipacaoTeste[]
+}
+
+model VarianteAB {
+  id            Int    @id @default(autoincrement())
+  testeId       Int
+  nome          String // "controle" | "variante_a" | "variante_b"
+  peso          Int    @default(50) // % de tráfego (ex: 50)
+  configuracoes String // JSON com as diferenças da variante
+
+  teste         TesteAB @relation(fields: [testeId], references: [id], onDelete: Cascade)
+  participacoes ParticipacaoTeste[]
+
+  @@unique([testeId, nome])
+}
+
+model ParticipacaoTeste {
+  id         Int      @id @default(autoincrement())
+  testeId    Int
+  varianteId Int
+  sessionId  String
+  userId     Int?
+  convertido Boolean  @default(false)
+  criadoEm   DateTime @default(now())
+
+  teste    TesteAB    @relation(fields: [testeId], references: [id], onDelete: Cascade)
+  variante VarianteAB @relation(fields: [varianteId], references: [id], onDelete: Cascade)
+
+  @@unique([testeId, sessionId])
 }

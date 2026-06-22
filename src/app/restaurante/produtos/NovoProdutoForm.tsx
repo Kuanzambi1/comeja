@@ -72,7 +72,7 @@ export default function NovoProdutoForm() {
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Preço (R$)"
+            placeholder="Preço (Kz)"
             value={form.precoReais}
             onChange={(e) => setForm({ ...form, precoReais: e.target.value })}
             required

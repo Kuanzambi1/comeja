@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCents } from "@/lib/utils";
+import { AutoRefresh } from "@/app/AutoRefresh";
 import StatusButton from "./StatusButton";
 
 export default async function EntregadorPedidosPage() {
@@ -12,6 +13,7 @@ export default async function EntregadorPedidosPage() {
     where: { entregadorId: user.userId },
     include: { restaurante: true, itens: { include: { produto: true } } },
     orderBy: { criadoEm: "desc" },
+    take: 50,
   });
 
   return (
@@ -52,6 +54,8 @@ export default async function EntregadorPedidosPage() {
           ))}
         </div>
       )}
+
+      <AutoRefresh intervalMs={10000} />
     </div>
   );
 }

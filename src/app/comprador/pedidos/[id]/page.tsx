@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import { formatCents } from "@/lib/utils";
+import { AutoRefresh } from "@/app/AutoRefresh";
 import CancelButton from "./CancelButton";
 import AvaliacaoForm from "./AvaliacaoForm";
 
@@ -59,7 +60,7 @@ export default async function PedidoDetailPage({
           )}
         </div>
         <p className="text-sm text-zinc-500">
-          {pedido.restaurante.nome} • {new Date(pedido.criadoEm).toLocaleDateString("pt-BR", {
+          {pedido.restaurante.nome} • {new Date(pedido.criadoEm).toLocaleDateString("pt", {
             day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
           })}
         </p>
@@ -206,6 +207,8 @@ export default async function PedidoDetailPage({
           </div>
         </div>
       )}
+
+      <AutoRefresh intervalMs={8000} status={pedido.status} />
     </div>
   );
 }

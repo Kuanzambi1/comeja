@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
 import { formatCents } from "@/lib/utils";
+import { AutoRefresh } from "@/app/AutoRefresh";
 import StatusButton from "./StatusButton";
 
 const statusConfig: Record<string, { label: string; color: string; desc: string }> = {
@@ -32,7 +33,7 @@ export default async function PedidoDetailPage({
   const pedido = await prisma.pedido.findUnique({
     where: { id: Number(id) },
     include: {
-      comprador: { include: { user: true, enderecos: true } },
+      comprador: { include: { enderecos: true } },
       itens: { include: { produto: true } },
       entregador: { include: { user: true } },
     },
@@ -53,7 +54,7 @@ export default async function PedidoDetailPage({
           <span className={`badge ${status.color}`}>{status.label}</span>
         </div>
         <p className="text-sm text-zinc-500">
-          {new Date(pedido.criadoEm).toLocaleString("pt-BR")}
+          {new Date(pedido.criadoEm).toLocaleString("pt")}
         </p>
         <div className="mt-3 rounded-xl bg-zinc-50 p-4">
           <p className="text-sm text-zinc-500">{status.desc}</p>
@@ -125,6 +126,8 @@ export default async function PedidoDetailPage({
           </div>
         </div>
       )}
+
+      <AutoRefresh intervalMs={8000} status={pedido.status} />
     </div>
   );
 }

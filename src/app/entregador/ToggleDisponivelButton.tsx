@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toggleDisponivel } from "@/actions/entregador";
 
 export default function ToggleDisponivelButton({
   disponivel,
@@ -14,13 +15,12 @@ export default function ToggleDisponivelButton({
 
   async function handleToggle() {
     setLoading(true);
-    const res = await fetch("/api/entregador/disponivel", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ disponivel: !disponivel }),
-    });
-    if (res.ok) router.refresh();
-    else setLoading(false);
+    try {
+      await toggleDisponivel(!disponivel);
+      router.refresh();
+    } catch {
+      setLoading(false);
+    }
   }
 
   return (

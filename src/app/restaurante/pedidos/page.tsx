@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { getAuthUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { formatCents } from "@/lib/utils";
+import { AutoRefresh } from "@/app/AutoRefresh";
 import Link from "next/link";
 
 const statusConfig: Record<string, { label: string; color: string }> = {
@@ -23,6 +24,7 @@ export default async function RestaurantePedidosPage() {
     where: { restauranteId: user.userId },
     include: { itens: { include: { produto: true } } },
     orderBy: [{ status: "asc" }, { criadoEm: "desc" }],
+    take: 50,
   });
 
   return (
@@ -60,7 +62,7 @@ export default async function RestaurantePedidosPage() {
                     {pedido.itens.map((i) => `${i.quantidade}x ${i.produto.nome}`).join(", ")}
                   </p>
                   <p className="text-xs text-zinc-400 mt-0.5">
-                    {new Date(pedido.criadoEm).toLocaleString("pt-BR")}
+                    {new Date(pedido.criadoEm).toLocaleString("pt")}
                   </p>
                 </div>
                 <div className="text-right shrink-0 ml-4">
@@ -71,6 +73,8 @@ export default async function RestaurantePedidosPage() {
           })}
         </div>
       )}
+
+      <AutoRefresh intervalMs={10000} />
     </div>
   );
 }

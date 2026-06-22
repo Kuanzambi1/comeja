@@ -1,6 +1,17 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { dispatchCartUpdate } from "../../CartIconWithBadge";
+import { trackCartAction } from "@/lib/tracker";
+
+type CartItem = {
+  produtoId: number;
+  nome: string;
+  precoCents: number;
+  quantidade: number;
+  restauranteId: number;
+  restauranteNome: string;
+};
 
 type Props = {
   produtoId: number;
@@ -20,7 +31,7 @@ export default function AddToCartButton({
   const router = useRouter();
 
   function addToCart() {
-    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const cart: CartItem[] = JSON.parse(localStorage.getItem("cart") || "[]");
     const currentRestauranteId = cart.length > 0 ? cart[0].restauranteId : null;
 
     if (currentRestauranteId && currentRestauranteId !== restauranteId) {
@@ -35,7 +46,7 @@ export default function AddToCartButton({
     }
 
     const existing = cart.find(
-      (item: any) => item.produtoId === produtoId
+      (item: CartItem) => item.produtoId === produtoId
     );
     if (existing) {
       existing.quantidade += 1;
@@ -51,6 +62,8 @@ export default function AddToCartButton({
     }
 
     localStorage.setItem("cart", JSON.stringify(cart));
+    dispatchCartUpdate();
+    trackCartAction("adicionar", nome, JSON.stringify({ precoCents }));
     router.refresh();
   }
 

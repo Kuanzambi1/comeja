@@ -4,6 +4,12 @@ import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
+const roles = [
+  { value: "COMPRADOR", label: "Cliente", icon: "😋", desc: "Peça comida" },
+  { value: "RESTAURANTE", label: "Restaurante", icon: "🍳", desc: "Venda mais" },
+  { value: "ENTREGADOR", label: "Entregador", icon: "🛵", desc: "Ganhe dinheiro" },
+];
+
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -69,13 +75,14 @@ function RegisterForm() {
   }
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-zinc-50">
       {/* Left - Visual */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-orange-500 to-orange-700 items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute -top-20 -right-20 h-80 w-80 rounded-full bg-orange-300/20 blur-3xl" />
-        <div className="absolute -bottom-20 -left-20 h-80 w-80 rounded-full bg-orange-200/20 blur-3xl" />
+      <div className="hidden lg:flex flex-1 bg-gradient-to-br from-zinc-900 via-orange-900 to-orange-700 items-center justify-center p-12 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(251,146,60,0.2),transparent_60%)]" />
+        <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-orange-500/10 blur-3xl" />
+        <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-orange-300/10 blur-3xl" />
         <div className="relative text-center max-w-md">
-          <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-white/20 text-5xl backdrop-blur-sm">
+          <div className="mx-auto mb-8 flex h-24 w-24 items-center justify-center rounded-3xl bg-white/10 backdrop-blur-sm text-5xl border border-white/10">
             🚀
           </div>
           <h2 className="text-3xl font-bold text-white">
@@ -83,11 +90,25 @@ function RegisterForm() {
             {form.role === "RESTAURANTE" && "Aumente seu alcance"}
             {form.role === "ENTREGADOR" && "Faça entregas e ganhe dinheiro"}
           </h2>
-          <p className="mt-4 text-lg text-orange-100 leading-relaxed">
+          <p className="mt-4 text-lg text-orange-100/80 leading-relaxed">
             {form.role === "COMPRADOR" && "Descubra restaurantes incríveis perto de você."}
             {form.role === "RESTAURANTE" && "Conecte-se com centenas de novos clientes todos os dias."}
             {form.role === "ENTREGADOR" && "Trabalhe no seu horário e receba por entrega."}
           </p>
+          <div className="mt-8 flex items-center justify-center gap-6 text-sm text-orange-200/60">
+            <span className="flex items-center gap-1.5">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Gratuito
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Rápido
+            </span>
+            <span className="flex items-center gap-1.5">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+              Seguro
+            </span>
+          </div>
         </div>
       </div>
 
@@ -106,7 +127,8 @@ function RegisterForm() {
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-4">
             {error && (
-              <div className="animate-scale-in rounded-xl bg-red-50 border border-red-100 p-4 text-sm font-medium text-red-700">
+              <div className="animate-scale-in rounded-xl bg-red-50 border border-red-100 p-4 text-sm font-medium text-red-700 flex items-center gap-2">
+                <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                 {error}
               </div>
             )}
@@ -116,19 +138,15 @@ function RegisterForm() {
                 Tipo de conta
               </label>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { value: "COMPRADOR", label: "Cliente", icon: "😋" },
-                  { value: "RESTAURANTE", label: "Restaurante", icon: "🍳" },
-                  { value: "ENTREGADOR", label: "Entregador", icon: "🛵" },
-                ].map((opt) => (
+                {roles.map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => updateField("role", opt.value)}
                     className={`flex flex-col items-center gap-1 rounded-xl border-2 p-3 transition-all ${
                       form.role === opt.value
-                        ? "border-orange-500 bg-orange-50"
-                        : "border-zinc-200 hover:border-zinc-300"
+                        ? "border-orange-500 bg-orange-50 shadow-sm"
+                        : "border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
                     }`}
                   >
                     <span className="text-xl">{opt.icon}</span>
@@ -233,7 +251,7 @@ function RegisterForm() {
 
           <p className="mt-8 text-center text-sm text-zinc-500">
             Já tem conta?{" "}
-            <Link href="/auth/login" className="font-semibold text-orange-600 hover:text-orange-700 transition">
+            <Link href="/auth/login" className="font-semibold text-orange-600 hover:text-orange-500 transition-colors">
               Entrar
             </Link>
           </p>

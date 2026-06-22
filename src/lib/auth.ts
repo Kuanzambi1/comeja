@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { SignJWT, jwtVerify } from "jose";
 import bcrypt from "bcryptjs";
 import { cookies } from "next/headers";
@@ -44,9 +45,18 @@ export async function verifyToken(
   }
 }
 
-export async function getAuthUser(): Promise<JwtPayload | null> {
+export const getAuthUser = cache(async (): Promise<JwtPayload | null> => {
   const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
   if (!token) return null;
   return verifyToken(token);
+});
+
+export function getAuthUserFromHeaders(
+  headers: Headers
+): JwtPayload | null {
+  const userId = headers.get("x-user-id");
+  const userRole = headers.get("x-user-role");
+  if (!userId || !userRole) return null;
+  return { userId: Number(userId), role: userRole as UserRole } as JwtPayload;
 }

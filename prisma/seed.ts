@@ -223,6 +223,24 @@ async function main() {
     },
   });
 
+  // A/B Test - CTA texto homepage
+  const testeCTA = await prisma.testeAB.upsert({
+    where: { id: 1 },
+    update: {},
+    create: {
+      nome: "cta_texto_home",
+      hipotese: "Alterar o CTA principal de 'Pedir Agora' para 'Peça Já' aumenta a taxa de clique em 15%",
+      pagina: "/",
+      ativo: true,
+      variantes: {
+        create: [
+          { nome: "controle", peso: 50, configuracoes: '{"ctaTexto":"Pedir Agora","ctaIcon":"→"}' },
+          { nome: "variante_a", peso: 50, configuracoes: '{"ctaTexto":"Peça Já","ctaIcon":"🔥"}' },
+        ],
+      },
+    },
+  });
+
   console.log("Seed concluído com sucesso!");
   console.log("Admin: admin@comeja.com / 123456");
   console.log("Restaurante 1: burger@comeja.com / 123456");

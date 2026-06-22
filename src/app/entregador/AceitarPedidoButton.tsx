@@ -1,7 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { aceitarPedido } from "@/actions/entregador";
 
 export default function AceitarPedidoButton({
   pedidoId,
@@ -13,13 +14,12 @@ export default function AceitarPedidoButton({
 
   async function handleAccept() {
     setLoading(true);
-    const res = await fetch(`/api/entregador/pedidos/${pedidoId}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "aceitar" }),
-    });
-    if (res.ok) router.refresh();
-    else setLoading(false);
+    try {
+      await aceitarPedido(pedidoId);
+      router.refresh();
+    } catch {
+      setLoading(false);
+    }
   }
 
   return (

@@ -25,29 +25,22 @@ export default async function RestauranteDashboard() {
 
   if (!restaurante) redirect("/auth/login");
 
-  const produtosCount = await prisma.produto.count({
-    where: { restauranteId: user.userId },
-  });
-
-  const pedidosCount = await prisma.pedido.count({
-    where: { restauranteId: user.userId },
-  });
-
-  const pedidosPendentes = await prisma.pedido.count({
-    where: { restauranteId: user.userId, status: "RECEBIDO" },
-  });
-
-  const faturamento = await prisma.pedido.aggregate({
-    where: { restauranteId: user.userId, status: "ENTREGUE" },
-    _sum: { totalCents: true },
-  });
-
-  const ultimosPedidos = await prisma.pedido.findMany({
-    where: { restauranteId: user.userId },
-    include: { itens: { include: { produto: true } } },
-    orderBy: { criadoEm: "desc" },
-    take: 5,
-  });
+  const [produtosCount, pedidosCount, pedidosPendentes, faturamento, ultimosPedidos] =
+    await Promise.all([
+      prisma.produto.count({ where: { restauranteId: user.userId } }),
+      prisma.pedido.count({ where: { restauranteId: user.userId } }),
+      prisma.pedido.count({ where: { restauranteId: user.userId, status: "RECEBIDO" } }),
+      prisma.pedido.aggregate({
+        where: { restauranteId: user.userId, status: "ENTREGUE" },
+        _sum: { totalCents: true },
+      }),
+      prisma.pedido.findMany({
+        where: { restauranteId: user.userId },
+        include: { itens: { include: { produto: true } } },
+        orderBy: { criadoEm: "desc" },
+        take: 5,
+      }),
+    ]);
 
   return (
     <div className="animate-fade-in">
