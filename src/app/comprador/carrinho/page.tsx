@@ -54,7 +54,7 @@ export default function CarrinhoPage() {
     updateCart(cart.filter((i) => i.produtoId !== produtoId));
   }
 
-  const taxaEntregaCents = 500;
+  const taxaEntregaCents = 100000;
   const subtotal = cart.reduce(
     (sum, item) => sum + item.precoCents * item.quantidade,
     0

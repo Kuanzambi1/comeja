@@ -8,7 +8,7 @@ const roleRoutes: Record<string, string[]> = {
   COMPRADOR: ["/comprador"],
   RESTAURANTE: ["/restaurante"],
   ENTREGADOR: ["/entregador"],
-  ADMIN: ["/admin"],
+  ADMIN: ["/admin", "/comprador", "/restaurante", "/entregador", "/"],
 };
 
 export async function proxy(request: NextRequest) {

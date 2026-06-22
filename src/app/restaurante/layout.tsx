@@ -9,7 +9,7 @@ export default async function RestauranteLayout({
   children: React.ReactNode;
 }) {
   const user = await getAuthUser();
-  if (!user || user.role !== "RESTAURANTE") redirect("/auth/login");
+  if (!user || (user.role !== "RESTAURANTE" && user.role !== "ADMIN")) redirect("/auth/login");
 
   const restaurante = await prisma.restaurante.findUnique({
     where: { userId: user.userId },

@@ -8,7 +8,7 @@ export default function NovoProdutoForm() {
   const [form, setForm] = useState({
     nome: "",
     descricao: "",
-    precoReais: "",
+    precoKz: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -18,7 +18,7 @@ export default function NovoProdutoForm() {
     setError("");
     setLoading(true);
 
-    const precoCents = Math.round(parseFloat(form.precoReais.replace(",", ".")) * 100);
+    const precoCents = Math.round(parseFloat(form.precoKz.replace(",", ".")) * 100);
 
     if (!precoCents || precoCents <= 0) {
       setError("Preço inválido");
@@ -37,7 +37,7 @@ export default function NovoProdutoForm() {
     });
 
     if (res.ok) {
-      setForm({ nome: "", descricao: "", precoReais: "" });
+      setForm({ nome: "", descricao: "", precoKz: "" });
       router.refresh();
     } else {
       const data = await res.json();
@@ -73,8 +73,8 @@ export default function NovoProdutoForm() {
           <input
             type="text"
             placeholder="Preço (Kz)"
-            value={form.precoReais}
-            onChange={(e) => setForm({ ...form, precoReais: e.target.value })}
+            value={form.precoKz}
+            onChange={(e) => setForm({ ...form, precoKz: e.target.value })}
             required
             className="input-field w-28"
           />

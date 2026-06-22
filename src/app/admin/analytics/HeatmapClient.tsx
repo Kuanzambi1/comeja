@@ -136,7 +136,13 @@ export default function HeatmapClient() {
           onMouseMove={onMouseMove}
           onMouseLeave={onMouseLeave}
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_#fff_0%,_#f8f9fa_100%)]" />
+          {/* Iframe carregando a página em background */}
+          <iframe
+            src={selectedPage}
+            className="absolute inset-0 w-full h-full pointer-events-none opacity-40 border-0"
+            title="Heatmap Background"
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(255,255,255,0.2)_0%,_rgba(248,249,250,0.5)_100%)] pointer-events-none" />
           {pontos.map((p, i) => {
             const intensity = p.count / maxCount;
             const size = 8 + intensity * 24;

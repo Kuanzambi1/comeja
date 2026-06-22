@@ -10,7 +10,7 @@ export default async function CompradorLayout({
   children: React.ReactNode;
 }) {
   const user = await getAuthUser();
-  if (!user || user.role !== "COMPRADOR") redirect("/auth/login");
+  if (!user || (user.role !== "COMPRADOR" && user.role !== "ADMIN")) redirect("/auth/login");
 
   return (
     <div className="min-h-screen bg-zinc-50">

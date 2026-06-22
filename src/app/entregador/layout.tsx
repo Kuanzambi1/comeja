@@ -8,7 +8,7 @@ export default async function EntregadorLayout({
   children: React.ReactNode;
 }) {
   const user = await getAuthUser();
-  if (!user || user.role !== "ENTREGADOR") redirect("/auth/login");
+  if (!user || (user.role !== "ENTREGADOR" && user.role !== "ADMIN")) redirect("/auth/login");
 
   return (
     <div className="min-h-screen bg-zinc-50">
